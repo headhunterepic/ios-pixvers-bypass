@@ -1,14 +1,9 @@
 // ==UserScript==
 // @name        pixverse nsfw video bypass by Pixvers Ai Creator++
-// @namespace   http://tampermonkey.net/
 // @match       https://app.pixverse.ai/*
-// @grant       none
-// @version     3.2
-// @author      Pixvers Ai Creator++
-// @description Bypass NSFW video restrictions and enable watermark-free downloads on Pixverse
 // @run-at      document-start
-// @updateURL   https://raw.githubusercontent.com/headhunterepic/pixvers-bypass/main/Bypass.user.js
-// @downloadURL https://raw.githubusercontent.com/headhunterepic/pixvers-bypass/main/Bypass.user.js
+// @version     3.0
+// @author      cptdan
 // ==/UserScript==
 
 (function () {
@@ -16,68 +11,13 @@
 
     let savedImagePath = null;
 
-    const ENCRYPTED_PASSWORD = 'Z2hINiFveG9kSHgqb1ZGMjg3IyM5S1FyNlFBZUhmJTcqUEZeSm9pJQ==';
-
-    function decryptPassword(encrypted) {
-        try {
-            console.log('[Debug] Decrypting password...');
-            const decrypted = atob(encrypted);
-            console.log('[Debug] Password decrypted successfully');
-            return decrypted;
-        } catch (error) {
-            console.error('[Error] Failed to decrypt password:', error);
-            return null;
-        }
-    }
-
-    function checkPassword() {
-        console.log('[Debug] Checking password...');
-        if (localStorage.getItem('scriptAuthorized')) {
-            console.log('[Debug] Script already authorized');
-            return true;
-        }
-
-        const userInput = prompt('กรุณาใส่รหัสผ่านเพื่อใช้งานสคริปต์:');
-        if (!userInput) {
-            console.log('[Debug] No password entered');
-            alert('กรุณาใส่รหัสผ่าน');
-            return false;
-        }
-
-        const correctPass = decryptPassword(ENCRYPTED_PASSWORD);
-        if (correctPass === null) {
-            alert('เกิดข้อผิดพลาดในการตรวจสอบรหัสผ่าน');
-            return false;
-        }
-
-        console.log('[Debug] Comparing passwords...');
-        if (userInput === correctPass) {
-            localStorage.setItem('scriptAuthorized', 'true');
-            console.log('[Debug] Password correct, script authorized');
-            alert('รหัสผ่านถูกต้อง! สคริปต์เริ่มทำงานแล้ว');
-            return true;
-        } else {
-            console.log('[Debug] Password incorrect');
-            alert('รหัสผ่านไม่ถูกต้อง สคริปต์จะไม่ทำงาน');
-            return false;
-        }
-    }
-
-    console.log('[Debug] Script starting...');
-    if (!checkPassword()) {
-        console.log('[Debug] Script stopped due to incorrect password');
-        return;
-    }
-
     function setupWatermarkButton() {
-        console.log('[Debug] Setting up Watermark-free button...');
         function findAndReplaceButton() {
             let watermarkDiv = Array.from(document.getElementsByTagName('div')).find(
                 el => el.textContent.trim() === 'Watermark-free'
             );
 
             if (watermarkDiv) {
-                console.log('[Debug] Watermark-free div found');
                 const newButton = document.createElement('button');
                 newButton.textContent = 'Watermark-free';
 
@@ -93,36 +33,23 @@
                         const videoUrl = videoElement.src;
                         console.log('[Watermark-free] Video URL:', videoUrl);
 
-                        fetch(videoUrl)
-                            .then(response => {
-                                if (!response.ok) throw new Error('Network response was not ok');
-                                return response.blob();
-                            })
-                            .then(blob => {
-                                const url = window.URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.download = videoUrl.split('/').pop() || 'video.mp4';
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                window.URL.revokeObjectURL(url);
-                                console.log('[Watermark-free] Download completed for:', videoUrl);
-                            })
-                            .catch(error => {
-                                console.error('[Watermark-free] Download failed:', error);
-                                alert('เกิดข้อผิดพลาดในการดาวน์โหลดวิดีโอ: ' + error.message);
-                            });
+                        const link = document.createElement('a');
+                        link.href = videoUrl;
+                        link.download = videoUrl.split('/').pop() || 'video.mp4';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+
+                        console.log('[Watermark-free] Download triggered for:', videoUrl);
                     } else {
                         console.error('[Watermark-free] Video element not found or no src attribute');
-                        alert('ไม่พบวิดีโอสำหรับดาวน์โหลด กรุณาแน่ใจว่ามีวิดีโอโหลดอยู่');
+                        alert('Could not find the video to download. Please ensure a video is loaded.');
                     }
                 };
 
                 watermarkDiv.parentNode.replaceChild(newButton, watermarkDiv);
-                console.log('[Debug] Watermark-free button replaced and listener attached');
+                console.log('[Watermark-free] Button replaced and listener attached');
             } else {
-                console.log('[Debug] Watermark-free div not found, retrying in 500ms');
                 setTimeout(findAndReplaceButton, 500);
             }
         }
@@ -131,9 +58,7 @@
     }
 
     function waitForAxios() {
-        console.log('[Debug] Waiting for axios...');
         if (typeof axios !== 'undefined') {
-            console.log('[Debug] Axios found, patching...');
             patchAxios();
         } else {
             setTimeout(waitForAxios, 10);
@@ -233,7 +158,6 @@
     }
 
     function patchAxios() {
-        console.log('[Debug] Patching axios...');
         const originalCreate = axios.create;
 
         axios.create = function (config) {
@@ -246,7 +170,10 @@
                     return promise.then(response => {
                         console.log('[Debug] /video/list/personal response:', response);
                         const modifiedData = modifyResponseData(response.data);
-                        return { ...response, data: modifiedData };
+                        return {
+                            ...response,
+                            data: modifiedData
+                        };
                     }).catch(error => {
                         console.error('[Axios Instance POST /video/list/personal] Error:', {
                             url: url,
@@ -288,7 +215,7 @@
                     return config;
                 },
                 function (error) {
-                    console.error('[Axios Request Interceptor] Error:', {
+                    console.error(`[Axios Request Interceptor ${error.config?.url?.includes('/media/batch_upload_media') ? '/media/batch_upload_media' : '/media/upload'}] Error:`, {
                         url: error.config?.url,
                         error: error.message,
                         timestamp: new Date().toISOString()
@@ -302,18 +229,28 @@
                     if (response.config.url && response.config.url.includes('/media/batch_upload_media')) {
                         console.log('[Debug] /media/batch_upload_media raw response:', response);
                         const modifiedData = modifyBatchUploadData(response.data);
-                        return { ...response, data: modifiedData };
+                        const modifiedResponse = {
+                            ...response,
+                            data: modifiedData
+                        };
+                        console.log('[Debug] /media/batch_upload_media modified response:', modifiedResponse);
+                        return modifiedResponse;
                     }
                     if (response.config.url && response.config.url.includes('/media/upload')) {
                         console.log('[Debug] /media/upload raw response:', response);
                         const modifiedData = modifySingleUploadData(response.data);
-                        return { ...response, data: modifiedData };
+                        const modifiedResponse = {
+                            ...response,
+                            data: modifiedData
+                        };
+                        console.log('[Debug] /media/upload modified response:', modifiedResponse);
+                        return modifiedResponse;
                     }
                     return response;
                 },
                 function (error) {
                     if (error.config && error.config.url && (error.config.url.includes('/media/batch_upload_media') || error.config.url.includes('/media/upload'))) {
-                        console.error('[Axios Response Interceptor] Error:', {
+                        console.error(`[Axios Response Interceptor ${error.config.url.includes('/media/batch_upload_media') ? '/media/batch_upload_media' : '/media/upload'}] Error:`, {
                             url: error.config.url,
                             error: error.message,
                             response: error.response?.data,
@@ -327,13 +264,10 @@
             return instance;
         };
 
-        console.log('[Debug] Axios patching complete');
+        console.log('Axios patching for /video/list/personal, /media/batch_upload_media, and /media/upload complete');
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        console.log('[Debug] DOMContentLoaded event fired');
-        setupWatermarkButton();
-    });
+    document.addEventListener('DOMContentLoaded', setupWatermarkButton);
 
     waitForAxios();
 })();
