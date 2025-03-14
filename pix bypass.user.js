@@ -11,10 +11,10 @@
 
     alert('บายพาสเปิดใช้งานแล้ว!');
 
-    // ตัวแปรสำหรับเก็บเส้นทางของไฟล์ที่อัปโหลด
+    
     let savedImagePath = null;
 
-    // ฟังก์ชันหลักสำหรับจัดการปุ่ม "Watermark-free"
+    
     function setupWatermarkButton() {
         // ค้นหาและแทนที่ div ด้วยปุ่ม
         function replaceWatermarkDivWithButton() {
@@ -23,7 +23,7 @@
             );
 
             if (!watermarkDiv) {
-                setTimeout(replaceWatermarkDivWithButton, 500); // รอถ้ายังไม่พบ
+                setTimeout(replaceWatermarkDivWithButton, 500); 
                 return;
             }
 
@@ -32,7 +32,7 @@
             console.log('[Watermark-free] Button replaced and listener attached');
         }
 
-        // สร้างปุ่ม "Watermark-free" และกำหนดการทำงาน
+       
         function createWatermarkButton(originalDiv) {
             const button = document.createElement('button');
             button.textContent = 'Watermark-free';
@@ -47,7 +47,7 @@
             return button;
         }
 
-        // ดาวน์โหลดวิดีโอจาก element video
+ 
         function downloadVideoWithoutWatermark() {
             const videoElement = document.querySelector('.component-video > video');
             if (!videoElement || !videoElement.src) {
@@ -72,7 +72,6 @@
         replaceWatermarkDivWithButton();
     }
 
-    // รอให้ Axios โหลดและทำการ patch
     function waitForAxios() {
         if (typeof axios === 'undefined') {
             setTimeout(waitForAxios, 10);
@@ -81,7 +80,6 @@
         patchAxios();
     }
 
-    // ปรับแต่ง Axios เพื่อแก้ไขการร้องขอและการตอบกลับ
     function patchAxios() {
         const originalCreate = axios.create;
         axios.create = function (config) {
@@ -92,11 +90,9 @@
         console.log('Axios patching for /video/list/personal, /media/batch_upload_media, and /media/upload complete');
     }
 
-    // ปรับแต่ง instance ของ Axios
     function patchInstance(instance) {
         const originalPost = instance.post;
 
-        // แก้ไข POST request สำหรับ /video/list/personal
         instance.post = function (url, data, config) {
             if (url.includes('/video/list/personal')) {
                 return originalPost.apply(this, arguments).then(response => {
@@ -110,20 +106,17 @@
             return originalPost.apply(this, arguments);
         };
 
-        // Interceptor สำหรับ request
         instance.interceptors.request.use(
             config => handleRequest(config),
             error => logError('Request Interceptor')(error)
         );
 
-        // Interceptor สำหรับ response
         instance.interceptors.response.use(
             response => handleResponse(response),
             error => logError('Response Interceptor')(error)
         );
     }
 
-    // จัดการ request ก่อนส่ง
     function handleRequest(config) {
         if (config.url && (config.url.includes('/media/batch_upload_media') || config.url.includes('/media/upload'))) {
             console.log(`[Debug] ${config.url.includes('/media/batch_upload_media') ? '/media/batch_upload_media' : '/media/upload'} request payload:`, config);
