@@ -9,30 +9,30 @@
 (function () {
     'use strict';
 
-    // เข้ารหัสรหัสผ่าน (ใช้ base64 เพื่อความง่าย แต่สามารถเปลี่ยนเป็นวิธีที่ซับซ้อนกว่านี้ได้)
-    const ENCRYPTED_PASSWORD = btoa('fdV5kkSBiG*u'); // เข้ารหัส "fdV5kkSBiG*u" เป็น base64
-    const CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 ชั่วโมงในหน่วยมิลลิวินาที
+    
+    const ENCRYPTED_PASSWORD = btoa('fdV5kkSBiG*u'); 
+    const CHECK_INTERVAL = 24 * 60 * 60 * 1000; 
     const STORAGE_KEY = 'pixverse_bypass_auth';
 
-    // ฟังก์ชันตรวจสอบรหัสผ่าน
+  
     function checkPassword() {
         const authData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
         const currentTime = Date.now();
 
-        // ถ้ามีการตรวจสอบแล้ว และยังไม่เกิน 24 ชม.
+        
         if (authData.timestamp && (currentTime - authData.timestamp < CHECK_INTERVAL)) {
             console.log('[Auth] Password still valid');
             return true;
         }
 
-        // ขอรหัสผ่านจากผู้ใช้
+        
         const userInput = prompt('Enter password to use Pixverse NSFW Video Bypass:');
         if (!userInput) {
             alert('Password required to continue!');
             return false;
         }
 
-        // ตรวจสอบรหัสผ่าน
+       
         const encryptedInput = btoa(userInput);
         if (encryptedInput === ENCRYPTED_PASSWORD) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({ timestamp: currentTime }));
@@ -45,7 +45,7 @@
         }
     }
 
-    // ตรวจสอบรหัสผ่านก่อนรันโค้ด
+    
     if (!checkPassword()) {
         console.log('[Auth] Script halted due to authentication failure');
         return; // หยุดการทำงานถ้ารหัสผ่านไม่ถูกต้อง
